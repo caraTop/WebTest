@@ -1,5 +1,6 @@
 let puzzles = [];
-let unlockedCount = 1; // First clue unlocked by default
+let unlockedCount = 1;
+let currentView = "clue"; // "clue" or "summary"
 let currentPuzzleIndex = 0;
 
 const clueList = document.getElementById("clueList");
@@ -8,7 +9,7 @@ const submitButton = document.getElementById("submitAnswer");
 const answerInput = document.getElementById("answerInput");
 
 /* =========================
-   Local Storage Handling
+   Local Storage
 ========================= */
 
 function loadProgress() {
@@ -33,43 +34,71 @@ function loadAnswer(index) {
 }
 
 /* =========================
-   Rendering
+   Rendering Sidebar
 ========================= */
 
 function renderClues() {
     clueList.innerHTML = "";
 
+    // Render unlocked clues
     for (let i = 0; i < unlockedCount; i++) {
         const li = document.createElement("li");
         li.textContent = puzzles[i].title;
-        li.onclick = () => loadPuzzle(i);
 
-        if (i === currentPuzzleIndex) {
+        if (currentView === "clue" && i === currentPuzzleIndex) {
             li.classList.add("active");
         }
 
+        li.onclick = () => {
+            currentView = "clue";
+            loadPuzzle(i);
+        };
+
         clueList.appendChild(li);
     }
+
+    // Add Summary option when all unlocked
+    if (unlockedCount === puzzles.length) {
+        const summaryItem = document.createElement("li");
+        summaryItem.textContent = "Summary";
+        summaryItem.classList.add("summary");
+
+        if (currentView === "summary") {
+            summaryItem.classList.add("active");
+        }
+
+        summaryItem.onclick = () => {
+            currentView = "summary";
+            showSummary();
+            renderClues();
+        };
+
+        clueList.appendChild(summaryItem);
+    }
 }
+
+/* =========================
+   Load Puzzle
+========================= */
 
 function loadPuzzle(index) {
     currentPuzzleIndex = index;
     puzzleText.textContent = puzzles[index].text;
+    answerInput.style.display = "block";
+    submitButton.style.display = "block";
     answerInput.value = loadAnswer(index);
-
     renderClues();
 }
 
 /* =========================
-   Summary Page
+   Summary View
 ========================= */
 
-function showSummaryPage() {
-    clueList.innerHTML = "";
+function showSummary() {
     answerInput.style.display = "none";
     submitButton.style.display = "none";
 
-    let summaryText = "All clues completed:\n\n";
+    let summaryText = "Clue Answers:\n\n";
 
     for (let i = 0; i < puzzles.length; i++) {
         const ans = loadAnswer(i) || "(no answer)";
@@ -89,7 +118,6 @@ submitButton.addEventListener("click", () => {
 
     saveAnswer(currentPuzzleIndex, answer);
 
-    // Unlock next clue if on latest unlocked
     if (
         currentPuzzleIndex === unlockedCount - 1 &&
         unlockedCount < puzzles.length
@@ -98,12 +126,7 @@ submitButton.addEventListener("click", () => {
         saveProgress();
     }
 
-    // If all clues unlocked → show summary
-    if (unlockedCount === puzzles.length) {
-        showSummaryPage();
-    } else {
-        renderClues();
-    }
+    renderClues();
 });
 
 /* =========================
@@ -116,13 +139,8 @@ fetch("./puzzles.json")
         puzzles = data.puzzles;
 
         loadProgress();
-
-        if (unlockedCount === puzzles.length) {
-            showSummaryPage();
-        } else {
-            renderClues();
-            loadPuzzle(0);
-        }
+        renderClues();
+        loadPuzzle(0);
     })
     .catch(error => {
         console.error("Failed to load puzzles:", error);
