@@ -5,19 +5,20 @@
     <title>Raw JSON Viewer</title>
 </head>
 <body>
+<pre id="json-display"></pre>
+
 <script>
-    // Replace 'data.json' with the name of your JSON file
-    fetch("./puzzles.json")
+    fetch('data.json')
         .then(response => {
             if (!response.ok) throw new Error('Could not load JSON file');
             return response.json();
         })
         .then(data => {
-            // Display JSON as raw text
-            document.body.textContent = JSON.stringify(data, null, 4);
+            // Display JSON with proper line breaks
+            document.getElementById('json-display').textContent = JSON.stringify(data, null, 4);
         })
         .catch(error => {
-            document.body.textContent = 'Error: ' + error.message;
+            document.getElementById('json-display').textContent = 'Error: ' + error.message;
         });
 </script>
 </body>
