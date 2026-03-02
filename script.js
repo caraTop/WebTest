@@ -1,6 +1,7 @@
 let puzzles = [];
+let jsonVersion = "";
 let unlockedCount = 1;
-let currentView = "clue"; // "clue" or "summary"
+let currentView = "clue";
 let currentPuzzleIndex = 0;
 
 const clueList = document.getElementById("clueList");
@@ -9,11 +10,15 @@ const submitButton = document.getElementById("submitAnswer");
 const answerInput = document.getElementById("answerInput");
 
 /* =========================
-   Local Storage
+   Local Storage by Version
 ========================= */
 
+function storageKey(key) {
+    return `${key}_v${jsonVersion}`;
+}
+
 function loadProgress() {
-    const savedUnlocked = localStorage.getItem("unlockedCount");
+    const savedUnlocked = localStorage.getItem(storageKey("unlockedCount"));
     if (savedUnlocked !== null) {
         unlockedCount = Math.max(1, parseInt(savedUnlocked));
     } else {
@@ -22,19 +27,19 @@ function loadProgress() {
 }
 
 function saveProgress() {
-    localStorage.setItem("unlockedCount", unlockedCount);
+    localStorage.setItem(storageKey("unlockedCount"), unlockedCount);
 }
 
 function saveAnswer(index, answer) {
-    localStorage.setItem("answer_" + index, answer);
+    localStorage.setItem(storageKey("answer_" + index), answer);
 }
 
 function loadAnswer(index) {
-    return localStorage.getItem("answer_" + index) || "";
+    return localStorage.getItem(storageKey("answer_" + index)) || "";
 }
 
 /* =========================
-   Rendering Sidebar
+   Check all unlocked answered
 ========================= */
 
 function allAnswered() {
@@ -44,10 +49,13 @@ function allAnswered() {
     return true;
 }
 
+/* =========================
+   Render Sidebar
+========================= */
+
 function renderClues() {
     clueList.innerHTML = "";
 
-    // Render unlocked clues
     for (let i = 0; i < unlockedCount; i++) {
         const li = document.createElement("li");
         li.textContent = puzzles[i].title;
@@ -64,7 +72,6 @@ function renderClues() {
         clueList.appendChild(li);
     }
 
-    // Show Summary only if all unlocked clues have answers
     if (allAnswered()) {
         const summaryItem = document.createElement("li");
         summaryItem.textContent = "Summary";
@@ -144,6 +151,7 @@ fetch("./puzzles.json")
     .then(response => response.json())
     .then(data => {
         puzzles = data.puzzles;
+        jsonVersion = data.version || "1.0";
 
         loadProgress();
         renderClues();
@@ -154,10 +162,15 @@ fetch("./puzzles.json")
     });
 
 /* =========================
-   Console Reset Command
+   Reset Console Command
 ========================= */
 
 window.resetGame = function () {
-    localStorage.clear();
+    // Remove all keys for this version
+    Object.keys(localStorage).forEach(key => {
+        if (key.endsWith("_v" + jsonVersion)) {
+            localStorage.removeItem(key);
+        }
+    });
     location.reload();
 };
