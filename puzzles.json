@@ -4,17 +4,17 @@
     {
       "id": 0,
       "title": "Clue 1",
-      "text": "Example 1"
+      "text": "Example question 1"
     },
     {
       "id": 1,
       "title": "Clue 2",
-      "text": "Example 2"
+      "text": "Example question 2"
     },
     {
       "id": 2,
       "title": "Clue 3",
-      "text": "Example 3"
+      "text": "Example question 3"
     }
   ]
 }
